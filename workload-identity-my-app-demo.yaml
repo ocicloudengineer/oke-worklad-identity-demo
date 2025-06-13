@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workload-identity-my-app-demo
+  namespace: my-app-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app-namespace
+  template:
+    metadata:
+      labels:
+        app: my-app-namespace
+    spec:
+      serviceAccountName: my-app-sa  # Link to the Service Account
+      automountServiceAccountToken: true
+      imagePullSecrets: # <--- ADD THIS SECTION
+        - name: ocisecret
+      containers:
+        - name: workload-identity-my-app-demo
+          image: sa-bogota-1.ocir.io/axtd5xmm9rsu/oke/my-workload-identity-java-app:latest # REPLACE
+          env:
+            - name: OCI_OBJECT_STORAGE_NAMESPACE
+              value: "axtd5xmm9rsu" # REPLACE with the namespace of your tenancy
+            - name: OCI_BUCKET_NAME
+              value: "bucket-workload-identity" # REPLACE with your bucket name
+            - name: OCI_REGION_ENV_VAR
+              value: "sa-bogota-1" # REPLACE e.g., sa-bogota-1, us-ashburn-1
+            - name: OCI_AUTH_PROVIDER
+              value: "workload_identity" # REPLACE (e.g.,workload_identity or config_file )
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
